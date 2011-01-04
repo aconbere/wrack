@@ -1,9 +1,19 @@
+var _id;
+
+var identify = function (id) {
+  _id = id;
+};
+
 var track = function (name, properties) {
   var event = { "name": name
               , "properties": properties
               };
 
-  $.ajax({ url: "http://localhost:3030/events"
+  if (_id) {
+    event["id"] = _id;
+  }
+
+  $.ajax({ url: "http://<%= host %>/events.js
          , type: "POST"
          , contentType: "application/json; charset=utf-8"
          , data: JSON.stringify(event)
@@ -11,12 +21,15 @@ var track = function (name, properties) {
              console.log("sent event: " + JSON.stringify(event));
              console.log("recieved: " + data);
            }
+         , error: function () {
+             console.log("error sending event");
+           }
          });
 }
 
 var events = function (name, filters, callback) {
   var data = merge({name: name}, filters || {})
-  $.getJSON("http://localhost:3030/events", { q: JSON.stringify(data) }, function (events) {
+  $.getJSON("http://localhost:3030/events", { query: JSON.stringify(data) }, function (events) {
     if(callback) callback(events);
   });
 };

@@ -15,6 +15,7 @@ client.open(function (err) {
 })
 
 app.use(express.bodyDecoder());
+app.use(express.cookieDecoder());
 app.use(express.staticProvider(__dirname + '/public'));
 
 app.set('view options', {
@@ -22,11 +23,16 @@ app.set('view options', {
 });
 
 app.get("/", function (req, res) {
-  res.send("Welcome to \"wrack\"");
+  res.send('Welcome to Wrack');
 });
 
-app.get("/test", function (req, res) {
-  res.render("test/index.haml");
+app.get("/api.js", function (req, res) {
+  console.log(app.env);
+  res.render("api/index.ejs", { locals: { host: "localhost" }});
+});
+
+app.get("/example", function (req, res) {
+  res.render("example/index.haml");
 });
 
 app.post("/events", function (req, res) {
@@ -37,20 +43,19 @@ app.post("/events", function (req, res) {
     return;
   }
 
-  var d = new Date();
-  console.log(d.getTime());
   var meta = { "ip": req.connection.remoteAddress
              , "referer": req.headers.referer
              , "user-agent": req.headers["user-agent"]
-             , "date": d.getTime()
+             , "date": (new Date()).toUTCString()
              };
 
   events_collection.insert(merge(doc, {"_meta": meta}));
   res.send("ok");
 });
 
+// q=<query>
 app.get("/events", function (req, res) {
-  events_collection.find(JSON.parse(req.query.query), function (err, cursor) {
+  events_collection.find(JSON.parse(req.query.q), function (err, cursor) {
     cursor.toArray(function(err, results) {
       res.send(JSON.stringify(results))
     });
