@@ -58,7 +58,8 @@ var getEvents = function (query, callback) {
   events_collection.find(query, function (err, cursor) {
     cursor.toArray(function(err, results) {
       var events = results.map(function (r) {
-        r._meta.date = r._meta.date.getTime();
+        var date = r._meta.date;
+        r._meta.date = date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate();
         return r;
       })
       callback(err, events);
@@ -99,31 +100,44 @@ app.get("/api/events/names", function (req, res) {
 // q=<query>
 app.get("/api/events", function (req, res) {
   console.log("GET /api/events");
+  // { <event.name> : { <date>: <count> } } 
   var end = new Date();
   var start = new Date(end.getTime() - (30 * 24 * 60 * 60 * 1000));
   var command = { mapreduce: "events"
-                , out: "events-grouped-by-date"
                 , query: {"_meta.date": {"$gte": start, "$lte": end}}
                 , map: (function () {
                     var date =  this._meta.date;
-                    emit(date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate(),  this.name );
+                    var d = date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate();
+                    var val = {};
+                    val[d] = 1;
+                    emit(this.name, val);
                   }).toString()
                 , reduce: (function (key, values) {
-                    var events = {};
+                    // [ ["2010-05-01", 1 ], ... ]
+                    var datesCount = {};
                     for (var i = 0; i < values.length; i++) {
-                      var name = values[i].name
-                      if (!events[name]) {
-                        events[name] = {};
-                        events[name][key] = 0;
+                      var value = values[i];
+                      var keys = [];
+                      for (var k in value) {
+                        keys.push(k);
                       }
-                      events[name][key] += 1;
+                      for (var j = 0; j < keys.length; j++) {
+                        var key = keys[j];
+                        if (datesCount[key]) {
+                          datesCount[key] += value[key];
+                        } else {
+                          datesCount[key] = value[key];
+                        }
+                      }
                     }
-                    return events;
+                    return datesCount;
                   }).toString()
                 };
-  client.executeDbCommand(command, function (err, results) {
-    client.createCollection("events-grouped-by-date", function (err, collection) {
 
+  client.executeDbCommand(command, function (err, results) {
+    console.log(results);
+    var tempCollection = results.documents[0].result;
+    client.createCollection(tempCollection, function (err, collection) {
       collection.find(function (err, cursor) {
         cursor.toArray(function (err, results) {
           res.send(JSON.stringify(results))

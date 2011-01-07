@@ -29,6 +29,7 @@ var Wrack = (function () {
     var uri = [path, '?', api.buildQuery(data)].join("");
     var d = document.createElement("script");
     d.setAttribute("src", uri);
+    d.setAttribute("async", true);
     d.setAttribute("type", "text/javascript");
     var e = document.getElementsByTagName("head")[0] || document.documentElement;
     e.insertBefore(d, e.firstChild)
