@@ -1,44 +1,55 @@
-var _id;
-
-var identify = function (id) {
-  _id = id;
-};
-
-var track = function (name, properties) {
-  var event = { "name": name
-              , "properties": properties
-              };
-
-  if (_id) {
-    event["id"] = _id;
+var Wrack = (function () {
+  var api = { sharedProperties: {}
+            , HOST: '<%= host %>'
+            , PORT: <%= port %>
+            , SCHEME: (("https:"==document.location.protocol)?"https:":"http:")
+            , TOKEN: "xyz"
+            }
+  api.register = function (name, data) {
+    api.sharedProperties.name = data;
   }
 
-  $.ajax({ url: "http://<%= host %>/events.js
-         , type: "POST"
-         , contentType: "application/json; charset=utf-8"
-         , data: JSON.stringify(event)
-         , success: function (data) {
-             console.log("sent event: " + JSON.stringify(event));
-             console.log("recieved: " + data);
-           }
-         , error: function () {
-             console.log("error sending event");
-           }
-         });
-}
+  api.identify = function (id) {
+    api.register("distinct_id", id);
+  }
 
-var events = function (name, filters, callback) {
-  var data = merge({name: name}, filters || {})
-  $.getJSON("http://localhost:3030/events", { query: JSON.stringify(data) }, function (events) {
-    if(callback) callback(events);
-  });
-};
+  api.track = function (ev, properties) {
+    properties = properties || {};
 
-var merge = function (target, source) {
-  for (var k in source) {
-    if (source.hasOwnProperty(k)) {
-      target[k] = source[k];
+    var event = { name: ev
+                , properties: api.merge(properties, api.sharedProperties)
+                };
+
+   
+    url = [api.SCHEME, '//', api.HOST, ":", api.PORT, "/track"].join("");
+    api.sendRequest(url, {'data': encodeURIComponent(JSON.stringify(event))});
+  };
+
+  api.sendRequest = function (path, data) {
+    var uri = [path, '?', api.buildQuery(data)].join("");
+    var d = document.createElement("script");
+    d.setAttribute("src", uri);
+    d.setAttribute("type", "text/javascript");
+    var e = document.getElementsByTagName("head")[0] || document.documentElement;
+    e.insertBefore(d, e.firstChild)
+  };
+
+  api.buildQuery = function (data) {
+    pairs = []
+    for (k in data) {
+      pairs.push(encodeURIComponent(k) + '=' + encodeURIComponent(data[k]));
     }
-  }
-  return target;
-};
+    return pairs.join("&");
+  };
+
+  api.merge = function (target, source) {
+    for (var k in source) {
+      if (source.hasOwnProperty(k)) {
+        target[k] = source[k];
+      }
+    }
+    return target;
+  };
+
+  return api;
+})();
