@@ -3,10 +3,9 @@
   %head
     %script{ src: "/js/vendor/jquery-1.4.4.js" }
     %script{ src: "/js/vendor/flot/jquery.flot.js" }
+    %script{ src: "/js/graph.js" }
   %body
     %h1 Welcome to Wrak
     %h2
       = "Event: " + name
-    
-    %p
-      = JSON.stringify(events)
+    #plot{ style: "width:600px;height:300px;" }

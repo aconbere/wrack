@@ -65,15 +65,13 @@ app.get("/track", function (req, res) {
 
   eventsCollection.insert(merge(doc, {"_meta": meta}))
 
-  daysQ = { "event": doc.name
-          , "day": day
-          }
-  daysDoc = merge(daysQ, { "$inc": { "count": 1 }})
 
-  daysCollection.update( { event: doc.name , day: day, date: date }
-                       , { "$inc": { count: 1 }}
+  daysCollection.update( { event: doc.name , day: day }
+                       , { "$inc": { count: 1 } }
                        , { upsert: true }
-                       , function () {})
+                       , function (err, result) {
+                          console.log(result)
+                       })
 
   res.send("\"ok\"")
 })
@@ -106,15 +104,16 @@ app.get("/api/events/count", function (req, res) {
 })
 
 app.get("/events", function (req, res) {
+  res.render("events/index.haml", { locals: { name: "all" }})
   //var query = JSON.parse(req.query.q)
-  var end = new Date()
-  var start = new Date(end.getTime() - (30 * 24 * 60 * 60 * 1000))
-  var query = {"_meta.date": {"$gte": start, "$lte": end}}
+  //var end = new Date()
+  //var start = new Date(end.getTime() - (30 * 24 * 60 * 60 * 1000))
+  //var query = {"_meta.date": {"$gte": start, "$lte": end}}
 
-  getEvents(query, function (err, events) {
-    var name = query.name || "all"
-    renderEventsPage(name, events, res)
-  })
+  //getEvents(query, function (err, events) {
+  //  var name = query.name || "all"
+  //  renderEventsPage(name, events, res)
+  //})
 })
 
 // gets a list of all the event names in the db
