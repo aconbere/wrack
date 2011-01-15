@@ -52,8 +52,15 @@ app.get("/events", function (req, res) {
   res.render("events/index.haml", { locals: { name: "all" }})
 })
 
-app.get("/api/events/count", function (req, res) {
-  events.getCount(function (err, results) {
+app.get("/events/:name", function (req, res) {
+  var query = (req.params.name == "all") ? {} : { event: req.params.name }
+
+  res.render("events/index.haml", { locals: { name: req.params.name }})
+})
+
+app.get("/api/events/:name/count", function (req, res) {
+  var query = (req.params.name == "all") ? {} : { event: req.params.name }
+  events.count(query, function (err, results) {
     res.send(JSON.stringify(results))
   });
 })
@@ -63,6 +70,26 @@ app.get("/api/events/names", function (req, res) {
   events.getNames(function (names) {
     res.send(JSON.stringify(results))
   });
+})
+
+app.get("/api/events/:name", function (req, res) {
+  var query = {}
+  if (req.query.q) {
+    try {
+      query = JSON.parse(req.query.q)
+    } catch (e) {}
+  }
+
+  if (!req.query.all) {
+    var end = new Date()
+    var start = new Date(end.getTime() - (30 * 24 * 60 * 60 * 1000))
+
+    query["_meta.date"] = {"$gte": start, "$lte": end}
+  }
+
+  events.get({}, function (err, results) {
+    res.send(JSON.stringify(results))
+  })
 })
 
 app.get("/api/events", function (req, res) {
