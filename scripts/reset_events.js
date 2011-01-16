@@ -1,4 +1,5 @@
-var events = require("./lib/events")
+#! /usr/bin/env node
+var events = require("../lib/events")
 
 events.init(function () {
   events.reset(function () {

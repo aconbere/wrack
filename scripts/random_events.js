@@ -1,11 +1,8 @@
-var mongodb = require("mongodb")
-  , client = new mongodb.Db('wrack', new mongodb.Server("127.0.0.1", 27017, {}))
-  , events = require("./lib/events")
-
-var userAgent = "Mozilla/5.0 (X11; U; Linux x86_64; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.19 Safari/534.13"
-
-var ip = "10.10.10.10"
-var referer = "http://www.google.com"
+#! /usr/bin/env node
+var events = require("../lib/events")
+  , userAgent = "Mozilla/5.0 (X11; U; Linux x86_64; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.19 Safari/534.13"
+  , ip = "10.10.10.10"
+  , referer = "http://www.google.com"
 
 var randomDate = function () {
   var d = (new Date()).getTime()
