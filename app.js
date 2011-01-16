@@ -32,6 +32,7 @@ app.get("/api.js", function (req, res) {
                               })
 })
 
+// incoming api endpoint
 app.get("/track", function (req, res) {
   var doc = JSON.parse(decodeURIComponent(req.query.data))
 
@@ -49,6 +50,7 @@ app.get("/track", function (req, res) {
 })
 
 app.get("/events", function (req, res) {
+  console.log("GET /events");
   res.render("events/index.haml", { locals: { name: "all" }})
 })
 
@@ -58,7 +60,9 @@ app.get("/events/:name", function (req, res) {
   res.render("events/index.haml", { locals: { name: req.params.name }})
 })
 
+// get's the count data structure for an event :name
 app.get("/api/events/:name/count", function (req, res) {
+  console.log("GET /api/events/:name/count")
   var query = (req.params.name == "all") ? {} : { event: req.params.name }
   events.count(query, function (err, results) {
     res.send(JSON.stringify(results))
@@ -66,12 +70,13 @@ app.get("/api/events/:name/count", function (req, res) {
 })
 
 // gets a list of all the event names in the db
-app.get("/api/events/names", function (req, res) {
-  events.getNames(function (names) {
-    res.send(JSON.stringify(results))
+app.get("/api/events/", function (req, res) {
+  events.getNames(function (err, names) {
+    res.send(JSON.stringify(names))
   });
 })
 
+// get's the full list of event data for an event :name
 app.get("/api/events/:name", function (req, res) {
   var query = {}
   if (req.query.q) {
@@ -80,35 +85,12 @@ app.get("/api/events/:name", function (req, res) {
     } catch (e) {}
   }
 
-  if (!req.query.all) {
-    var end = new Date()
-    var start = new Date(end.getTime() - (30 * 24 * 60 * 60 * 1000))
+  var end = new Date()
+  var start = new Date(end.getTime() - (30 * 24 * 60 * 60 * 1000))
 
-    query["_meta.date"] = {"$gte": start, "$lte": end}
-  }
+  query["_meta.date"] = {"$gte": start, "$lte": end}
 
   events.get({}, function (err, results) {
     res.send(JSON.stringify(results))
   })
 })
-
-app.get("/api/events", function (req, res) {
-  var query = {}
-  if (req.query.q) {
-    try {
-      query = JSON.parse(req.query.q)
-    } catch (e) {}
-  }
-
-  if (!req.query.all) {
-    var end = new Date()
-    var start = new Date(end.getTime() - (30 * 24 * 60 * 60 * 1000))
-
-    query["_meta.date"] = {"$gte": start, "$lte": end}
-  }
-
-  events.get({}, function (err, results) {
-    res.send(JSON.stringify(results))
-  })
-})
-
