@@ -94,3 +94,11 @@ app.get("/api/events/:name", function (req, res) {
     res.send(JSON.stringify(results))
   })
 })
+
+// Retention is where we go to look at things like cohorts
+app.get("/retention", function (req, res) {
+})
+
+app.get("/retention/:event", function (req, res) {
+})
+
